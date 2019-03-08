@@ -23,14 +23,33 @@ spec:
       annotations:
         contact: adaickalavan <adaickalavan@gmail.com> 
     spec:
+      volumes:
+        - name: display
+          hostPath:
+            path: /tmp/.X11-unix
+        - name: camera
+          hostPath: 
+            path: /dev/video0     
       containers:
         - name: goproducer
           image: goproducer
           imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8000
           env:
-            - TOPICNAME: video1
-            - 
+            - name: TOPICNAME
+              value: video1
+            - name: KAFKAPORT
+              value: kafka1:9093
+            - name: COMPRESSIONTYPE
+              value: gzip
+            - name: VIDEODEVICE
+              value: "0"
+            - name: DISPLAY
+              value: $DISPLAY      
+          volumeMounts:
+            - name: display 
+              mountPath: /tmp/.X11-unix
+          volumeDevices:
+            - name: camera
+              devicePath: /dev/video0          
           resources:
 

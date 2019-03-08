@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: hostname-service
+  name: goproducer-service
 spec:
   # Expose the service on a static port on each node
   # so that we can access the service from outside the cluster

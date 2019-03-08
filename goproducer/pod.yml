@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Pod
+
+metadata:
+  name: goproducer
+  labels:
+    release: stable
+    environment: dev
+  annotations:
+    contact: adaickalavan <adaickalavan@gmail.com> 
+spec:
+  volumes:
+    - name: display
+      hostPath:
+        path: /tmp/.X11-unix 
+    - name: camera
+      hostPath:
+        path: /dev/video0   
+  containers:
+    - name: goproducer
+      image: goproducer
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: TOPICNAME
+          value: video1
+        - name: KAFKAPORT
+          value: kafka1:9093
+        - name: COMPRESSIONTYPE
+          value: gzip
+        - name: VIDEOLINK
+          value: rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov  
+        - name: VIDEODEVICE
+          value: "0"
+        - name: DISPLAY
+          value: $DISPLAY  
+      securityContext:
+          privileged: true        
+      volumeMounts:
+        - name: display 
+          mountPath: /tmp/.X11-unix
+        - name: camera
+          mountPath: /dev/video0          
+      resources:
+
+# ---
+# # Declares a claim to use the persistent volume
+# # defined in the previous YAML.
+# # The pod in will eventually use this
+# # persistent volume claim when mounting the volume.
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: camera-pvc
+# spec:
+#   # "Give me a persistent volume with at least
+#   # 64MB of space where I can read and write."
+#   resources:
+#   accessModes:
+#     - ReadWriteMany
+  
+
+# ---
+# # Declares a persistent volume is available for
+# # pods to use as a long-term storage solution.
+# # This persistent volume is backed by your local
+# # minikube cluster.
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: pvc
+# spec:
+#     accessModes:
+#     - ReadWriteMany
+#     # Configuration settings for the persistent volume.
+#     # In this case, we're going to store the data on minikube.
+#     hostPath:
+#       path: /dev/video0

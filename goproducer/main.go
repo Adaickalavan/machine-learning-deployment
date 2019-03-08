@@ -1,32 +1,29 @@
 package main
 
 import (
-	"confluentkafkago"
-	"encoding/json"
 	"log"
 	"os"
 	"strconv"
-	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"gocv.io/x/gocv"
 )
 
 func main() {
 
-	broker := os.Getenv("KAFKAPORT")
-	topic := os.Getenv("TOPICNAME")
+	// broker := os.Getenv("KAFKAPORT")
+	// topic := os.Getenv("TOPICNAME")
 
-	p, _, err := confluentkafkago.NewProducer(broker)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// // Capture video from internet stream
-	// webcam, err := gocv.OpenVideoCapture(os.Getenv("VIDEOLINK"))
+	// p, _, err := confluentkafkago.NewProducer(broker)
 	// if err != nil {
-	// 	panic("Error in opening webcam: " + err.Error())
+	// 	log.Fatal(err)
 	// }
+
+	// Capture video from internet stream
+	webcam, err := gocv.OpenVideoCapture(os.Getenv("VIDEOLINK"))
+	if err != nil {
+		panic("Error in opening webcam: " + err.Error())
+	}
+	defer webcam.Close()
 
 	// // Capture video from file
 	// webcam, err := gocv.VideoCaptureFile(os.Getenv("VIDEOFILE"))
@@ -36,11 +33,11 @@ func main() {
 	// defer webcam.Close()
 
 	// Capture video from device
-	webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
-	if err != nil {
-		panic("Error in opening webcam: " + err.Error())
-	}
-	defer webcam.Close()
+	// webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
+	// if err != nil {
+	// 	panic("Error in opening webcam: " + err.Error())
+	// }
+	// defer webcam.Close()
 
 	// Open display window
 	window := gocv.NewWindow("Producer Video")
@@ -53,27 +50,27 @@ func main() {
 			continue
 		}
 
-		//Form the struct to be sent to Kafka message queue
-		doc := topicMsg{
-			Mat:      frame.ToBytes(),
-			Channels: frame.Channels(),
-			Rows:     frame.Rows(),
-			Cols:     frame.Cols(),
-			Type:     frame.Type(),
-		}
+		// //Form the struct to be sent to Kafka message queue
+		// doc := topicMsg{
+		// 	Mat:      frame.ToBytes(),
+		// 	Channels: frame.Channels(),
+		// 	Rows:     frame.Rows(),
+		// 	Cols:     frame.Cols(),
+		// 	Type:     frame.Type(),
+		// }
 
-		//Prepare message to be sent to Kafka
-		docBytes, err := json.Marshal(doc)
-		if err != nil {
-			log.Fatal("Json marshalling error. Error:", err.Error())
-		}
+		// //Prepare message to be sent to Kafka
+		// docBytes, err := json.Marshal(doc)
+		// if err != nil {
+		// 	log.Fatal("Json marshalling error. Error:", err.Error())
+		// }
 
-		//Send message into Kafka queue
-		p.ProduceChannel() <- &kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          docBytes,
-			Timestamp:      time.Now(),
-		}
+		// //Send message into Kafka queue
+		// p.ProduceChannel() <- &kafka.Message{
+		// 	TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		// 	Value:          docBytes,
+		// 	Timestamp:      time.Now(),
+		// }
 
 		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
 
@@ -86,9 +83,9 @@ func main() {
 		// window.WaitKey(168) //6 frames per second
 	}
 
-	// Close the producer
-	p.Flush(10000)
-	p.Close()
+	// // Close the producer
+	// p.Flush(10000)
+	// p.Close()
 }
 
 //Result represents the Kafka queue message format

@@ -10,7 +10,7 @@ services:
       - TOPICNAME=video1
       - KAFKAPORT=kafka1:9093
       - COMPRESSIONTYPE=gzip
-      # - VIDEOLINK=rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov
+      - VIDEOLINK=rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov
       # - VIDEOLINK=rtsp://b1.dnsdojo.com:1935/live/sys2.stream
       # - VIDEOFILE=/data/BigBuckBunny.mp4
       - VIDEODEVICE=0
@@ -22,11 +22,11 @@ services:
     volumes:
       # - /home/administrator/GoWorkspace/src/github.com/adaickalavan/projects/BigBuckBunny.mp4:/data/BigBuckBunny.mp4 
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    networks:
-      - zookeeper_dockerNet 
-        # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
+#     networks:
+#       - zookeeper_dockerNet 
+#         # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
       
-networks:
-  zookeeper_dockerNet:
-    external: true #Label the other docker-compose network as an external network to the current docker-compose file
+# networks:
+#   zookeeper_dockerNet:
+#     external: true #Label the other docker-compose network as an external network to the current docker-compose file
 
