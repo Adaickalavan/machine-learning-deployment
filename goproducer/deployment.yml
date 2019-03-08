@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+
+metadata:
+  name: goproducer-deployment
+
+spec:
+  replicas: 1
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+  selector:
+    matchLabels:
+      release: stable
+
+  template:
+    metadata:
+      name: goproducer
+      labels:
+        release: stable
+        environment: dev
+      annotations:
+        contact: adaickalavan <adaickalavan@gmail.com> 
+    spec:
+      containers:
+        - name: goproducer
+          image: goproducer
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - TOPICNAME: video1
+            - 
+          resources:
+

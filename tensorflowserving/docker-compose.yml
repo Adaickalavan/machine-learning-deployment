@@ -1,0 +1,23 @@
+---
+version: '3'
+
+services:
+  tensorflowserving:
+    image: tensorflow/serving
+    container_name: tensorflowserving 
+    environment:
+      - MODEL_NAME=tfModel
+    ports: 
+      - 8500:8500 #gRPC   
+      - 8501:8501 #REST 
+    volumes:
+      # - /home/administrator/GoWorkspace/src/github.com/tensorflow/serving/tensorflow_serving/servables/tensorflow/testdata/saved_model_half_plus_three:/models/tfModel 
+      # - /home/administrator/GoWorkspace/src/github.com/adaickalavan/Data-pipeline/tensorflowserving/saved_model:/models/tfModel 
+      - /home/administrator/GoWorkspace/src/github.com/adaickalavan/Scalable-Deployment/tensorflowserving/resnet:/models/tfModel 
+      # - /home/adaickalavan/GoWorkspace/src/github.com/adaickalavan/Scalable-Deployment/tensorflowserving/resnet:/models/tfModel 
+    networks:
+      - zookeeper_dockerNet # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet). 
+      
+networks:
+  zookeeper_dockerNet:
+    external: true #Label the other docker-compose network as an external network to the current docker-compose file

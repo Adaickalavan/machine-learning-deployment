@@ -1,0 +1,169 @@
+version: '3'
+services:
+
+  #Zookeeper
+  zookeeper1:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper1   
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    networks:
+      - dockerNet
+    ports:
+      - 12181:12181    
+    environment:
+      - ZOOKEEPER_SERVER_ID=1
+      - ZOOKEEPER_CLIENT_PORT=12181 
+      # - ZOOKEEPER_SERVERS=localhost:12888:13888
+      # - ZOOKEEPER_SERVERS=192.168.99.100:12888:13888
+      # - ZOOKEEPER_SERVERS=localhost:12888:13888, localhost:22888:23888, localhost:32888:33888  
+      # - ZOOKEEPER_SERVERS=192.168.99.100:12888:13888; 192.168.99.100:22888:23888; 192.168.99.100:32888:33888       
+      - ZOOKEEPER_TICK_TIME=2000
+
+  # zookeeper2:
+  #   image: confluentinc/cp-zookeeper
+  #   container_name: zookeeper2   
+  #   restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+  #   networks:
+  #     - dockerNet
+  #   ports:
+  #     - 22181:22181  
+  #   environment:
+  #     - ZOOKEEPER_SERVER_ID=2
+  #     - ZOOKEEPER_CLIENT_PORT=22181
+  #     - ZOOKEEPER_SERVERS=localhost:12888:13888, localhost:22888:23888, localhost:32888:33888 
+  #     # - ZOOKEEPER_SERVERS=192.168.99.100:12888:13888; 192.168.99.100:22888:23888; 192.168.99.100:32888:33888 
+  #     - ZOOKEEPER_TICK_TIME=2000
+
+  # zookeeper3:
+  #   image: confluentinc/cp-zookeeper
+  #   container_name: zookeeper3   
+  #   restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+  #   networks:
+  #     - dockerNet
+  #   ports:
+  #     - 32181:32181    
+  #   environment:
+  #     - ZOOKEEPER_SERVER_ID=3
+  #     - ZOOKEEPER_CLIENT_PORT=32181
+  #     - ZOOKEEPER_SERVERS=localhost:12888:13888, localhost:22888:23888, localhost:32888:33888 
+  #     # - ZOOKEEPER_SERVERS=192.168.99.100:12888:13888; 192.168.99.100:22888:23888; 192.168.99.100:32888:33888 
+  #     - ZOOKEEPER_TICK_TIME=2000
+
+  #Kafka
+  kafka1:
+    image: confluentinc/cp-kafka
+    container_name: kafka1
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    depends_on:
+      - zookeeper1
+    networks:
+      - dockerNet 
+    ports:
+      - 19091:19091
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181 
+      # - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181, zookeeper2:22181, zookeeper3:32181
+      - KAFKA_ADVERTISED_LISTENERS=HOST://localhost:19091, BROK://kafka1:9092, PROD://kafka1:9093, CONS://kafka1:9094  
+      # - KAFKA_ADVERTISED_LISTENERS=HOST://192.168.99.100:19091, BROK://kafka1:9092, PROD://kafka1:9093, CONS://kafka1:9094  
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=BROK:PLAINTEXT, PROD:PLAINTEXT, CONS:PLAINTEXT, HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=BROK
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes 
+      - KAFKA_MESSAGE_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes
+      - KAFKA_LOG_CLEANUP_POLICY=delete #Cleanup policy for segments beyond the retention window
+      - KAFKA_LOG_RETENTION_MINUTES=1 #Number of minutes to keep a log file before deleting. Default 168 hours.
+      # - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+  kafka2:
+    image: confluentinc/cp-kafka
+    container_name: kafka2
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    depends_on:
+      - zookeeper1
+    networks:
+      - dockerNet 
+    ports:
+      - 29091:29091    
+    environment:
+      - KAFKA_BROKER_ID=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181      
+    # - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181, zookeeper2:22181, zookeeper3:32181
+      - KAFKA_ADVERTISED_LISTENERS=HOST://localhost:29091, BROK://kafka2:9092, PROD://kafka2:9093, CONS://kafka2:9094  
+      # - KAFKA_ADVERTISED_LISTENERS=HOST://192.168.99.100:29091, BROK://kafka2:9092, PROD://kafka2:9093, CONS://kafka2:9094  
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=BROK:PLAINTEXT, PROD:PLAINTEXT, CONS:PLAINTEXT, HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=BROK
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes 
+      - KAFKA_MESSAGE_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes
+      - KAFKA_LOG_CLEANUP_POLICY=delete #Cleanup policy for segments beyond the retention window
+      - KAFKA_LOG_RETENTION_MINUTES=1 #Number of minutes to keep a log file before deleting. Default 168 hours.
+
+  kafka3:
+    image: confluentinc/cp-kafka
+    container_name: kafka3
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    depends_on:
+      - zookeeper1
+    networks:
+      - dockerNet 
+    ports:
+      - 39091:39091    
+    environment:
+      - KAFKA_BROKER_ID=3
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181      
+    # - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:12181, zookeeper2:22181, zookeeper3:32181
+      - KAFKA_ADVERTISED_LISTENERS=HOST://localhost:39091, BROK://kafka3:9092, PROD://kafka3:9093, CONS://kafka3:9094  
+      # - KAFKA_ADVERTISED_LISTENERS=HOST://192.168.99.100:39091, BROK://kafka3:9092, PROD://kafka3:9093, CONS://kafka3:9094   
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=BROK:PLAINTEXT, PROD:PLAINTEXT, CONS:PLAINTEXT, HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=BROK
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes 
+      - KAFKA_MESSAGE_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes
+      - KAFKA_LOG_CLEANUP_POLICY=delete #Cleanup policy for segments beyond the retention window
+      - KAFKA_LOG_RETENTION_MINUTES=1 #Number of minutes to keep a log file before deleting. Default 168 hours.
+
+  #Mongo database
+  # mongo:
+  #   image: mongo
+  #   container_name: mongo
+  #   networks:
+  #     - dockerNet
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - mongo-data:/data/db #Volume location on `Host:Container` machine   
+
+  # kafdrop:
+  #   image: thomsch98/kafdrop
+  #   container_name: kafdrop
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka 
+  #   networks:
+  #     - dockerNet      
+  #   ports:
+  #     - 9010:9010
+  #   environment:
+  #     - ZK_HOSTS=zookeeper:2181
+  #     - LISTEN=9010
+
+  # kafkamanager:
+  #   image: sheepkiller/kafka-manager:latest
+  #   container_name: kafkamanager
+  #   restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+  #   depends_on:
+  #     - zookeeper1
+  #     - kafka1
+  #   networks:
+  #     - dockerNet 
+  #   ports:
+  #     - 9000:9000
+  #   environment:
+  #     ZK_HOSTS: zookeeper1:12181
+
+# volumes:
+  # Volume location on host machine is not specified. 
+  # Docker will create and manage these named volumes in a part of the host filesystem 
+  # which is managed by Docker (i.e., /var/lib/docker/volumes/ on Linux).
+  # mongo-data:
+networks:
+  dockerNet:
+    driver: bridge
