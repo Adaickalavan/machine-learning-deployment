@@ -1,0 +1,14 @@
+---
+version: '3'
+
+services:
+  #Stream video from images
+  govideo:
+    image: govideo
+    container_name: govideo 
+    environment:
+      - HOST=localhost:8080  
+      - VIDEOLINK=http://127.0.0.1:8081
+    network_mode: host 
+
+

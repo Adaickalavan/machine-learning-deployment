@@ -2,33 +2,27 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 
 metadata:
-  name: goproducer-deployment
-  labels:
-    app: goproducer-deployment
-    release: stable
-    environment: dev
+  name: goproducer
   annotations:
       contact: adaickalavan <adaickalavan@gmail.com> 
 
 spec:
   replicas: 1
+  
   strategy: 
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
+
   selector:
     matchLabels:
       app: goproducer
-      release: stable
-      environment: dev
 
   template:
     metadata:
       name: goproducer
       labels:
         app: goproducer
-        release: stable
-        environment: dev
     spec:
       containers:
         - name: goproducer
@@ -38,9 +32,10 @@ spec:
             - name: TOPICNAME
               value: video1
             - name: KAFKAPORT
-              value: kafka1:9093
+              value: kf1-service:19092
             - name: COMPRESSIONTYPE
               value: gzip   
+            - name: VIDEOLINK
+              value: rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov     
           resources:
-          securityContext:
-              privileged: true  
+
