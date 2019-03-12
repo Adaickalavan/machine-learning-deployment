@@ -1,0 +1,13 @@
+FROM adaickalavan/gocvkafka-alpine as buildstage
+
+# Author label
+LABEL Author Adaickalavan Meiyappan
+
+# Copy the local package files (from development computer) to the container's workspace (docker image)
+COPY . /go/src/app 
+
+# Build the app command inside the container
+RUN go install app
+
+# Run the app command by default when the container starts
+ENTRYPOINT ["/go/bin/app"]

@@ -32,7 +32,7 @@ func main() {
 	// }
 	// defer webcam.Close()
 
-	// Capture video from device
+	// // Capture video from device
 	// webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
 	// if err != nil {
 	// 	panic("Error in opening webcam: " + err.Error())
