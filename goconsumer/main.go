@@ -8,12 +8,19 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
+var (
+	err    error
+	webcam *gocv.VideoCapture
+	stream *mjpeg.Stream
+)
+
 func main() {
 
 	// Load env variables
 	broker := os.Getenv("KAFKAPORT")
 	topics := []string{os.Getenv("TOPICNAME")}
 	group := os.Getenv("GROUPNAME")
+	host := os.Getenv("HOST")
 
 	//Create consumer
 	c, err := confluentkafkago.NewConsumer(broker, group)
@@ -26,6 +33,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// create the mjpeg stream
+	stream = mjpeg.NewStream()
 
 	//Initialize message handler
 	msg := newMessage()

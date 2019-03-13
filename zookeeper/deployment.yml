@@ -1,15 +1,20 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 
 metadata:
   name: zookeeper1
+  namespace: default
   annotations:
       contact: adaickalavan <adaickalavan@gmail.com> 
 
 spec:
+  replicas: 1
+
   selector:
     matchLabels:
       app: zookeeper1
+
+  serviceName: zk1-service
 
   template:
     metadata:
@@ -23,6 +28,11 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:    
             - containerPort: 2181
+              name: client
+            - containerPort: 2888
+              name: server
+            - containerPort: 3888
+              name: leader-election
           env:
             - name: ZOOKEEPER_SERVER_ID
               value: "1"
@@ -37,9 +47,10 @@ kind: Service
 apiVersion: v1
 metadata:
   name: zk1-service
+  namespace: default
 
 spec:
-  type: LoadBalancer
+  type: NodePort
 
   selector:
     app: zookeeper1
@@ -53,18 +64,23 @@ spec:
       port: 2181
 
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 
 metadata:
   name: kafka1
+  namespace: default
   annotations:
       contact: adaickalavan <adaickalavan@gmail.com> 
 
 spec:
+  replicas: 1
+
   selector:
     matchLabels:
       app: kafka1
+
+  serviceName: kf1-service
 
   template:
     metadata:
@@ -109,9 +125,10 @@ kind: Service
 apiVersion: v1
 metadata:
   name: kf1-service
+  namespace: default
 
 spec:
-  type: LoadBalancer
+  type: NodePort
 
   selector:
     app: kafka1
@@ -127,4 +144,3 @@ spec:
       port: 19092
     - name: kf1-cons-port
       port: 19093
-      targetPort: 19093  

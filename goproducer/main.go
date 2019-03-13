@@ -61,7 +61,7 @@ func main() {
 		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
 
 		//Wait for xx milliseconds
-		time.Sleep(time.Duration(42)) //24 frames per second
+		time.Sleep(42 * time.Millisecond) //24 frames per second
 
 		//Read delivery report before producing next message
 		// <-doneChan
