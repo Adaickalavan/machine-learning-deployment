@@ -16,18 +16,14 @@ var (
 	// Load env variables
 	broker        = os.Getenv("KAFKAPORT")
 	topics        = []string{os.Getenv("TOPICNAME")}
-	// group         = os.Getenv("GROUPNAME")
+	group         = os.Getenv("GROUPNAME")
 	displayaddr   = os.Getenv("DISPLAYADDR")
-	frameinterval = time.Duration(getenvint("FRAMEINTERVAL"))
+	frameInterval = time.Duration(getenvint("FRAMEINTERVAL"))
 )
 
 func main() {
 	// create the mjpeg stream
-	stream = mjpeg.NewStream()
-
-	stream.FrameInterval = frameinterval
-	stream.Broker = broker
-	stream.Topics = topics
+	stream = mjpeg.NewStream(broker, topics, group, frameInterval)
 
 	// start capturing
 	fmt.Println("Capturing. Point your browser to " + displayaddr)

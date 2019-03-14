@@ -20,9 +20,10 @@ import (
 
 // Stream represents a single video feed.
 type Stream struct {
-	FrameInterval time.Duration
-	Broker        string
-	Topics        []string
+	broker        string
+	topics        []string
+	group         string
+	frameInterval time.Duration
 }
 
 const boundaryWord = "MJPEGBOUNDARY"
@@ -41,56 +42,56 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	doc := &topicMsg{}
 
 	//Create consumer
-	c, err := confluentkafkago.NewConsumer(s.Broker, "HiGroup")
+	c, err := confluentkafkago.NewConsumer(s.broker, time.Now().String())
 	if err != nil {
 		log.Fatal("Error in creating NewConsumer.", err)
 	}
-
-	log.Println("After newconsumer")
+	// Close the consumer
+	defer c.Close()
 
 	//Subscribe to topics
-	err = c.SubscribeTopics(s.Topics, nil)
+	err = c.SubscribeTopics(s.topics, nil)
 	if err != nil {
+		c.Close()
 		log.Fatal("Error in SubscribeTopics.", err)
 	}
 
-	log.Println("After subscribetopics")
-
 	// Consume messages
+ConsumeLoop:
 	for e := range c.Events() {
 		switch ev := e.(type) {
 		case kafka.AssignedPartitions:
-			log.Printf("%% %v\n", ev)
+			// log.Printf("%% %v\n", ev)
 			c.Assign(ev.Partitions)
 		case kafka.RevokedPartitions:
-			log.Printf("%% %v\n", ev)
+			// log.Printf("%% %v\n", ev)
 			c.Unassign()
 		case kafka.PartitionEOF:
-			log.Printf("%% Reached %v\n", ev)
+			// log.Printf("%% Reached %v\n", ev)
 		case kafka.Error:
 			// Errors should generally be considered as informational, the client will try to automatically recover
-			log.Printf("%% Error: %v\n", ev)
+			// log.Printf("%% Error: %v\n", ev)
 		case *kafka.Message:
 
 			//Read message into `topicMsg` struct
 			err := json.Unmarshal(ev.Value, doc)
 			if err != nil {
-				log.Println(err)
+				// log.Println(err)
 				continue
 			}
 
 			//Retrieve img
-			log.Printf("%% Message sent %v on %s\n", ev.Timestamp, ev.TopicPartition)
+			// log.Printf("%% Message sent %v on %s\n", ev.Timestamp, ev.TopicPartition)
 			img, err := gocv.NewMatFromBytes(doc.Rows, doc.Cols, doc.Type, doc.Mat)
 			if err != nil {
-				log.Println("Frame:", err)
+				// log.Println("Frame:", err)
 				continue
 			}
 
 			//Encode gocv mat to jpeg
 			jpeg, err := gocv.IMEncode(gocv.JPEGFileExt, img)
 			if err != nil {
-				log.Println("Error in IMEncode:", err)
+				// log.Println("Error in IMEncode:", err)
 				continue
 			}
 
@@ -103,21 +104,21 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			//Write new frame to web
 			_, err = w.Write(frame)
 			if err != nil {
-				break
+				break ConsumeLoop
 			}
 
 			//Wait for xx milliseconds
-			time.Sleep(42 * time.Millisecond) //24 frames per second
+			time.Sleep(s.frameInterval * time.Millisecond)
 
 		default:
-			log.Println("Ignored")
+			// log.Println("Ignored")
 			continue
 		}
 
 		//Record the current topic-partition assignments
 		tpSlice, err := c.Assignment()
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 			continue
 		}
 
@@ -125,7 +126,7 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for index, tp := range tpSlice {
 			_, high, err := c.QueryWatermarkOffsets(*(tp.Topic), tp.Partition, 100)
 			if err != nil {
-				log.Println(err)
+				// log.Println(err)
 				continue
 			}
 			tpSlice[index].Offset = kafka.Offset(high)
@@ -135,8 +136,6 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.Assign(tpSlice)
 	}
 
-	// Close the consumer
-	c.Close()
 	log.Println("Stream:", r.RemoteAddr, "disconnected")
 }
 
@@ -149,6 +148,11 @@ type topicMsg struct {
 }
 
 // NewStream initializes and returns a new Stream.
-func NewStream() *Stream {
-	return &Stream{}
+func NewStream(broker string, topics []string, group string, frameInterval time.Duration) *Stream {
+	return &Stream{
+		broker:        broker,
+		topics:        topics,
+		group:         group,
+		frameInterval: frameInterval,
+	}
 }

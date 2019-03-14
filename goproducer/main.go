@@ -16,6 +16,7 @@ func main() {
 
 	broker := os.Getenv("KAFKAPORT")
 	topic := os.Getenv("TOPICNAME")
+	frameInterval := time.Duration(getenvint("FRAMEINTERVAL"))
 
 	p, _, err := confluentkafkago.NewProducer(broker)
 	if err != nil {
@@ -61,7 +62,7 @@ func main() {
 		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
 
 		//Wait for xx milliseconds
-		time.Sleep(42 * time.Millisecond) //24 frames per second
+		time.Sleep(frameInterval * time.Millisecond)
 
 		//Read delivery report before producing next message
 		// <-doneChan

@@ -36,9 +36,9 @@ spec:
             - name: GROUPNAME
               value: displayvideo 
             - name: DISPLAYADDR
-              value: :8085  
+              value: :8080  
             - name: FRAMEINTERVAL
-              value: "42"      
+              value: "42"     
           resources:
 
 ---
@@ -61,4 +61,4 @@ spec:
     # targetPort - the container port to send requests to
     - name: govideo-port
       nodePort: 30163 
-      port: 8085
+      port: 8080
