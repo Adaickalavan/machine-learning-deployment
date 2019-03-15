@@ -9,8 +9,6 @@ import (
 )
 
 var (
-	err    error
-	webcam *gocv.VideoCapture
 	stream *mjpeg.Stream
 )
 

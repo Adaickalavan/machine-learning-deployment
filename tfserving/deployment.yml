@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+
+metadata:
+  name: tfserving
+  annotations:
+      contact: adaickalavan <adaickalavan@gmail.com> 
+
+spec:
+  replicas: 3
+
+  strategy: 
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: tfserving
+
+  template:
+    metadata:
+      name: tfserving
+      labels:
+        app: tfserving
+    spec:
+      containers:
+        - name: tfserving
+          image: tfserving
+          imagePullPolicy: IfNotPresent
+          ports:    
+            - name: grpc
+              containerPort: 8500
+            - name: rest
+              containerPort: 8501
+          resources:
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: tfserving-service
+  namespace: default
+
+spec:
+  type: LoadBalancer
+
+  selector:
+    app: tfserving
+
+  ports:
+    - name: tfserving-grpc
+      port: 8500
+    - name: tfserving-rest
+      port: 8501

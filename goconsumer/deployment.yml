@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 
 metadata:
-  name: govideo
+  name: goconsumer
   annotations:
       contact: adaickalavan <adaickalavan@gmail.com> 
 
@@ -16,17 +16,17 @@ spec:
 
   selector:
     matchLabels:
-      app: govideo
+      app: goconsumer
 
   template:
     metadata:
-      name: govideo
+      name: goconsumer
       labels:
-        app: govideo
+        app: goconsumer
     spec:
       containers:
-        - name: govideo
-          image: govideo
+        - name: goconsumer
+          image: goconsumer
           imagePullPolicy: IfNotPresent
           env:
             - name: TOPICNAME
@@ -34,29 +34,12 @@ spec:
             - name: KAFKAPORT
               value: kf1-service:19093
             - name: GROUPNAME
-              value: displayvideo 
-            - name: DISPLAYADDR
-              value: localhost:8080    
+              value: goconsumer 
+            - name: MLURL1
+              value: tfserving:8501/v1/models/tfModel:predict
+            - MLLABELS1=/data/labels/imagenetLabels.json  
           resources:
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: displayvideo-service
-
-spec:
-  type: NodePort
-
-  selector:
-    app: govideo
-
-  ports:
-    # Three types of ports for a service
-    # nodePort - a static port assigned on each the node
-    # port     - port exposed internally in the cluster
-    # targetPort - the container port to send requests to
-    - name: displayvideo-port
-      nodePort: 30000 
-      port: 8080
-      targetPort: 8080
+          volumeMounts:
+      - MLLABELS1=/data/labels/imagenetLabels.json
+      - /home/administrator/GoWorkspace/src/github.com/adaickalavan/Scalable-Deployment/tensorflowserving/resnet/1538687457/assets:/data/labels
+    
