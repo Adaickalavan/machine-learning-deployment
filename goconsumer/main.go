@@ -2,10 +2,13 @@ package main
 
 import (
 	"confluentkafkago"
+	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"gocv.io/x/gocv"
 )
 
 func main() {
@@ -74,13 +77,9 @@ func main() {
 }
 
 func writeOutput() {
-	// Stream images from RTSP to Kafka message queue
+	// Write processed images into Kafka message queue
 	frame := gocv.NewMat()
 	for {
-		if !webcam.Read(&frame) {
-			continue
-		}
-
 		//Form the struct to be sent to Kafka message queue
 		doc := topicMsg{
 			Mat:      frame.ToBytes(),
