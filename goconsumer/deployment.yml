@@ -33,8 +33,10 @@ spec:
               value: videocam
             - name: TOPICNAMEOUT
               value: videodisplay  
-            - name: KAFKAPORT
+            - name: KAFKAPORTIN
               value: kf1-service:19093
+            - name: KAFKAPORTOUT
+              value: kf1-service:19092  
             - name: GROUPNAME
               value: goconsumer 
           envFrom:

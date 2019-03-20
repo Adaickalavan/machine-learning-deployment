@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,18 +16,18 @@ type imagenet struct {
 }
 
 //NewImagenet returns a new handle to specified machine learning model
-func NewImagenet(modelurl string, labelurl string) Handler {
+func NewImagenet(modelurl string, labelurl string) (Handler, error) {
 
 	labels := make(map[int]string)
 
 	// Read-in labels
 	dat, err := ioutil.ReadFile(labelurl)
 	if err != nil {
-		log.Fatal("labelurl file read-in error", err)
+		return errors.New("Failed to read in labelurl", err)
 	}
 	err = json.Unmarshal(dat, &labels)
 	if err != nil {
-		log.Fatal("Invalid labels", err)
+		return errors.New("Failure in unmarshalling labels", err)
 	}
 	labels[1000] = "Nothing"
 
@@ -37,12 +38,11 @@ func NewImagenet(modelurl string, labelurl string) Handler {
 			chIn:   make(chan Input),
 			chOut:  make(chan Output, 1),
 		},
-	}
+	}, nil
 }
 
 //Predict classifies input images
 func (imn *imagenet) Predict() {
-
 	//Write initial prediction into shared output channel
 	imn.chOut <- Output{Class: "Nothing"}
 
