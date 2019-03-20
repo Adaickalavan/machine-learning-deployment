@@ -138,7 +138,7 @@ func writeOutput(videoDisplay chan gocv.Mat) {
 	}()
 
 	broker := os.Getenv("KAFKAPORTOUT")
-	topic := []string{os.Getenv("TOPICNAMEOUT")}
+	topic := os.Getenv("TOPICNAMEOUT")
 
 	p, _, err := confluentkafkago.NewProducer(broker)
 	if err != nil {

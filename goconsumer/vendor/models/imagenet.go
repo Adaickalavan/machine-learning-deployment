@@ -23,11 +23,11 @@ func NewImagenet(modelurl string, labelurl string) (Handler, error) {
 	// Read-in labels
 	dat, err := ioutil.ReadFile(labelurl)
 	if err != nil {
-		return errors.New("Failed to read in labelurl", err)
+		return &imagenet{}, errors.New("Failed to read in labelurl. " + err.Error())
 	}
 	err = json.Unmarshal(dat, &labels)
 	if err != nil {
-		return errors.New("Failure in unmarshalling labels", err)
+		return &imagenet{}, errors.New("Failure in unmarshalling labels. " + err.Error())
 	}
 	labels[1000] = "Nothing"
 
