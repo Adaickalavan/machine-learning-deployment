@@ -30,7 +30,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: TOPICNAME
-              value: video1
+              value: videocam
             - name: KAFKAPORT
               value: kf1-service:19092
             - name: COMPRESSIONTYPE

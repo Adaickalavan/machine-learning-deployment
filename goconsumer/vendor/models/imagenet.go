@@ -1,4 +1,4 @@
-package imagenet
+package models
 
 import (
 	"bytes"
@@ -6,28 +6,23 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"gocv.io/x/gocv"
 )
 
-//Model trained for imagenet. Consumes input via ChIn channel and returns via Chout channel.
-type Model struct {
-	labels map[int]string
-	url    string
-	ChIn   chan In
-	ChOut  chan Out
+type imagenet struct {
+	baseHandler
 }
 
-//NewModel is a Model constructor
-func NewModel(url string) *Model {
+//NewImagenet returns a new handle to specified machine learning model
+func NewImagenet(modelurl string, labelurl string) Handler {
 
 	labels := make(map[int]string)
 
-	// Read-in labels for mlurl1
-	dat, err := ioutil.ReadFile(os.Getenv("MLLABELS1"))
+	// Read-in labels
+	dat, err := ioutil.ReadFile(labelurl)
 	if err != nil {
-		log.Fatal("File read-in error.", err)
+		log.Fatal("labelurl file read-in error", err)
 	}
 	err = json.Unmarshal(dat, &labels)
 	if err != nil {
@@ -35,31 +30,23 @@ func NewModel(url string) *Model {
 	}
 	labels[1000] = "Nothing"
 
-	return &Model{
-		labels: labels,
-		url:    url,
-		ChIn:   make(chan In, 1),
-		ChOut:  make(chan Out, 1),
+	return &imagenet{
+		baseHandler{
+			labels: labels,
+			url:    modelurl,
+			chIn:   make(chan Input),
+			chOut:  make(chan Output, 1),
+		},
 	}
 }
 
-//In represents input for the model
-type In struct {
-	Img gocv.Mat
-}
-
-//Out represents output for the model
-type Out struct {
-	Class string
-}
-
 //Predict classifies input images
-func (model *Model) Predict() {
+func (imn *imagenet) Predict() {
 
 	//Write initial prediction into shared output channel
-	model.ChOut <- Out{Class: "Nothing"}
+	imn.chOut <- Output{Class: "Nothing"}
 
-	for elem := range model.ChIn {
+	for elem := range imn.chIn {
 		img := elem.Img
 
 		//Encode gocv mat to jpeg
@@ -70,19 +57,19 @@ func (model *Model) Predict() {
 		}
 
 		//Prepare request message
-		payload := infer{
+		inference := infer{
 			Instances: []instance{
 				instance{Image: b64Encode{B64: buf}},
 			},
 		}
 
 		//Query the machine learning model
-		reqBody, err := json.Marshal(payload)
+		reqBody, err := json.Marshal(inference)
 		if err != nil {
 			log.Println("Error in Marshal: ", err)
 			continue
 		}
-		req, err := http.NewRequest("POST", model.url, bytes.NewBuffer(reqBody))
+		req, err := http.NewRequest("POST", imn.url, bytes.NewBuffer(reqBody))
 		if err != nil {
 			log.Println("Error in NewRequest: ", err)
 			continue
@@ -103,13 +90,13 @@ func (model *Model) Predict() {
 			continue
 		}
 		predClass := resBody.Predictions[0].Classes
-		pred, ok := model.labels[predClass-1]
+		pred, ok := imn.labels[predClass-1]
 		if !ok {
-			pred = model.labels[1000]
+			pred = imn.labels[1000]
 		}
 
 		//Write prediction into shared output channel
-		model.ChOut <- Out{Class: pred}
+		imn.chOut <- Output{Class: pred}
 	}
 }
 

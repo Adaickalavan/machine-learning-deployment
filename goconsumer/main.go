@@ -8,19 +8,12 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-var (
-	err    error
-	webcam *gocv.VideoCapture
-	stream *mjpeg.Stream
-)
-
 func main() {
 
 	// Load env variables
 	broker := os.Getenv("KAFKAPORT")
-	topics := []string{os.Getenv("TOPICNAME")}
+	topicIn := []string{os.Getenv("TOPICNAMEIN")}
 	group := os.Getenv("GROUPNAME")
-	host := os.Getenv("HOST")
 
 	//Create consumer
 	c, err := confluentkafkago.NewConsumer(broker, group)
@@ -29,35 +22,29 @@ func main() {
 	}
 
 	//Subscribe to topics
-	err = c.SubscribeTopics(topics, nil)
+	err = c.SubscribeTopics(topicIn, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// create the mjpeg stream
-	stream = mjpeg.NewStream()
-
-	//Initialize message handler
-	msg := newMessage()
 
 	// Consume messages
 	for e := range c.Events() {
 		switch ev := e.(type) {
 		case kafka.AssignedPartitions:
-			log.Printf("%% %v\n", ev)
+			// log.Printf("%% %v\n", ev)
 			c.Assign(ev.Partitions)
 		case kafka.RevokedPartitions:
-			log.Printf("%% %v\n", ev)
+			// log.Printf("%% %v\n", ev)
 			c.Unassign()
 		case kafka.PartitionEOF:
-			log.Printf("%% Reached %v\n", ev)
+			// log.Printf("%% Reached %v\n", ev)
 		case kafka.Error:
 			// Errors should generally be considered as informational, the client will try to automatically recover
-			log.Printf("%% Error: %v\n", ev)
+			// log.Printf("%% Error: %v\n", ev)
 		case *kafka.Message:
-			msg.handler(ev)
+			handler(ev)
 		default:
-			log.Println("Ignored")
+			// log.Println("Ignored")
 			continue
 		}
 
@@ -84,4 +71,43 @@ func main() {
 
 	// Close the consumer
 	c.Close()
+}
+
+func writeOutput() {
+	// Stream images from RTSP to Kafka message queue
+	frame := gocv.NewMat()
+	for {
+		if !webcam.Read(&frame) {
+			continue
+		}
+
+		//Form the struct to be sent to Kafka message queue
+		doc := topicMsg{
+			Mat:      frame.ToBytes(),
+			Channels: frame.Channels(),
+			Rows:     frame.Rows(),
+			Cols:     frame.Cols(),
+			Type:     frame.Type(),
+		}
+
+		//Prepare message to be sent to Kafka
+		docBytes, err := json.Marshal(doc)
+		if err != nil {
+			log.Fatal("Json marshalling error. Error:", err.Error())
+		}
+
+		//Send message into Kafka queue
+		p.ProduceChannel() <- &kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          docBytes,
+			Timestamp:      time.Now(),
+		}
+
+		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
+
+	}
+
+	// Close the producer
+	p.Flush(10000)
+	p.Close()
 }

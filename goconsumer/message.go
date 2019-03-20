@@ -4,39 +4,62 @@ import (
 	"encoding/json"
 	"image"
 	"image/color"
-	"imagenet"
 	"log"
+	"models"
 	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"gocv.io/x/gocv"
 )
 
-var imNet1 = imagenet.NewModel(os.Getenv("MLURL1")) // Initialize imagenet model
-var imNet2 = imagenet.NewModel(os.Getenv("MLURL1")) // Initialize imagenet model
+var modelurls = make(map[string]string)
+var labelurls = make(map[string]string)
+var modelParams = make(map[int]*modelParam)
+var statusColor = color.RGBA{200, 150, 50, 0}
+
+type modelParam struct {
+	modelHandler models.Handler
+	modelName    string
+	pred         string
+}
 
 func init() {
-	go imNet1.Predict()
-	go imNet2.Predict()
-}
+	// Read-in modelurls and labelurls
+	err := json.Unmarshal([]byte(os.Getenv("MODELURLS")), &modelurls)
+	if err != nil {
+		log.Fatal("Invalid model urls", err)
+	}
+	err = json.Unmarshal([]byte(os.Getenv("LABELURLS")), &labelurls)
+	if err != nil {
+		log.Fatal("Invalid label urls", err)
+	}
 
-type message struct {
-	status1      string
-	status2      string
-	statusColor color.RGBA
-	window      *gocv.Window
-}
+	//Create models and start prediction
+	ind := -1
+	for modelName, modelurl := range modelurls {
+		labelurl, ok := labelurls[modelName]
+		if !ok {
+			log.Fatal("Missing label url", err)
+		}
 
-func newMessage() *message {
-	return &message{
-		status1:      "Nothing1",
-		status2:      "Nothing2",
-		statusColor: color.RGBA{200, 150, 50, 0},
-		window:      gocv.NewWindow("Consumer Video"),
+		var modelHandler models.Handler
+		switch modelName {
+		case "imagenet":
+			modelHandler = models.NewImagenet(modelurl, labelurl)
+		default:
+			log.Fatal("Model not recognised")
+		}
+		go modelHandler.Predict()
+
+		ind = ind + 1
+		modelParams[ind] = &modelParam{
+			modelHandler: modelHandler,
+			modelName:    modelName,
+			pred:         "Nothing"}
 	}
 }
 
-func (msg *message) handler(ev *kafka.Message) error {
+func handler(ev *kafka.Message) error {
 
 	//Read message into `topicMsg` struct
 	doc := &topicMsg{}
@@ -46,7 +69,7 @@ func (msg *message) handler(ev *kafka.Message) error {
 		return err
 	}
 
-	//Retrieve frame
+	// Retrieve frame
 	log.Printf("%% Message sent %v on %s\n", ev.Timestamp, ev.TopicPartition)
 	frame, err := gocv.NewMatFromBytes(doc.Rows, doc.Cols, doc.Type, doc.Mat)
 	if err != nil {
@@ -54,26 +77,28 @@ func (msg *message) handler(ev *kafka.Message) error {
 		return err
 	}
 
-	//Query machine learning model. Read and write to their input and output channels.
-	select {
-	case res := <-imNet1.ChOut:
-		msg.status1 = res.Class
-		imNet1.ChIn <- imagenet.In{Img: frame} //Load latest available image 
-	default:
-	}
-	select {
-	case res := <-imNet2.ChOut:
-		msg.status2 = res.Class
-		imNet2.ChIn <- imagenet.In{Img: frame} //Load latest available image 
-	default:
+	// Query machine learning model.
+	for _, mp := range modelParams {
+		// Read from input channels
+		mp.modelHandler.Post(models.Input{Img: frame})
+
+		// Write to output channels
+		res, err := mp.modelHandler.Get()
+		if err == nil {
+			mp.pred = res.Class
+		}
 	}
 
 	//Display data
-	gocv.PutText(&frame, msg.status1, image.Pt(10, 20), gocv.FontHersheyPlain, 1.2, msg.statusColor, 2)
-	gocv.PutText(&frame, msg.status2, image.Pt(10, 40), gocv.FontHersheyPlain, 1.2, msg.statusColor, 2)
-	msg.window.ResizeWindow(doc.Cols, doc.Rows)
-	msg.window.IMShow(frame)
-	msg.window.WaitKey(1)
+	for ind := 0; ind < len(modelParams); ind++ {
+		gocv.PutText(
+			&frame,
+			modelParams[ind].modelName+" : "+modelParams[ind].pred,
+			image.Pt(10, 20),
+			gocv.FontHersheyPlain, 1.2,
+			statusColor, 2,
+		)
+	}
 
 	return nil
 }

@@ -30,11 +30,11 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: TOPICNAME
-              value: video1
+              value: videodisplay
             - name: KAFKAPORT
               value: kf1-service:19093
             - name: GROUPNAME
-              value: displayvideo 
+              value: videodisplay
             - name: DISPLAYADDR
               value: :8080  
             - name: FRAMEINTERVAL

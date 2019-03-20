@@ -29,17 +29,28 @@ spec:
           image: goconsumer
           imagePullPolicy: IfNotPresent
           env:
-            - name: TOPICNAME
-              value: video1
+            - name: TOPICNAMEIN
+              value: videocam
+            - name: TOPICNAMEOUT
+              value: videodisplay  
             - name: KAFKAPORT
               value: kf1-service:19093
             - name: GROUPNAME
               value: goconsumer 
-            - name: MLURL1
-              value: tfserving:8501/v1/models/tfModel:predict
-            - MLLABELS1=/data/labels/imagenetLabels.json  
+          envFrom:
+            - configMapRef:
+                name: models-configmap    
           resources:
-          volumeMounts:
-      - MLLABELS1=/data/labels/imagenetLabels.json
-      - /home/administrator/GoWorkspace/src/github.com/adaickalavan/Scalable-Deployment/tensorflowserving/resnet/1538687457/assets:/data/labels
-    
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: models-configmap
+data:
+  MODELURLS: |
+    {"imagenet":"http://tfserving-service:8501/v1/models/tfModel:predict",
+    "imagenet":"http://tfserving-service:8501/v1/models/tfModel:predict"}            
+  LABELURLS: |
+    {"imagenet":"/go/src/app/assets/imagenetLabels.json",
+    "imagenet":"/go/src/app/assets/imagenetLabels.json"}  
