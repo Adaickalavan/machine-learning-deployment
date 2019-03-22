@@ -41,7 +41,7 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	doc := &topicMsg{}
 
-	//Create consumer
+	//Create new Consumer in a new ConsumerGroup
 	c, err := confluentkafkago.NewConsumer(s.broker, time.Now().String())
 	if err != nil {
 		log.Fatal("Error in creating NewConsumer.", err)
