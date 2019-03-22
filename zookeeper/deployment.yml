@@ -107,9 +107,9 @@ spec:
             - name: KAFKA_ZOOKEEPER_CONNECT
               value: zk1-service:2181
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: BROK://$(MY_POD_IP):19091, PROD://$(MY_POD_IP):19092, CONS://$(MY_POD_IP):19093
+              value: BROK://$(MY_POD_IP):19091, PROD1://$(MY_POD_IP):19092, PROD2://$(MY_POD_IP):19093, CONS1://$(MY_POD_IP):19094, CONS2://$(MY_POD_IP):19095
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: BROK:PLAINTEXT, PROD:PLAINTEXT, CONS:PLAINTEXT
+              value: BROK:PLAINTEXT, PROD1:PLAINTEXT, PROD2:PLAINTEXT, CONS1:PLAINTEXT, CONS2:PLAINTEXT
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: BROK
 
@@ -146,7 +146,11 @@ spec:
     # targetPort - the container port to send requests to
     - name: kf1-brok-port
       port: 19091
-    - name: kf1-prod-port
+    - name: kf1-prod1-port
       port: 19092
-    - name: kf1-cons-port
+    - name: kf1-prod2-port
       port: 19093
+    - name: kf1-cons1-port
+      port: 19094
+    - name: kf1-cons2-port
+      port: 19095

@@ -48,7 +48,7 @@ func message(ev *kafka.Message) error {
 		gocv.PutText(
 			&frame,
 			modelParams[ind].modelName+" : "+modelParams[ind].pred,
-			image.Pt(10, 20),
+			image.Pt(10, ind*20+20),
 			gocv.FontHersheyPlain, 1.2,
 			statusColor, 2,
 		)

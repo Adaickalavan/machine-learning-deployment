@@ -32,7 +32,7 @@ spec:
             - name: TOPICNAME
               value: videodisplay
             - name: KAFKAPORT
-              value: kf1-service:19093
+              value: kf1-service:19095
             - name: GROUPNAME
               value: videodisplay
             - name: DISPLAYADDR

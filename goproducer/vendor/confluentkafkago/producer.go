@@ -2,20 +2,19 @@ package confluentkafkago
 
 import (
 	"log"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 // NewProducer returns a new producers
-func NewProducer(broker string) (*kafka.Producer, chan bool, error) {
+func NewProducer(broker string, compression string) (*kafka.Producer, chan bool, error) {
 	doneChan := make(chan bool)
 
 	// Create producer
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": broker,
 		"message.max.bytes": 100000000, //100MB. Defaults to 1MB. Maximum is 1GB.
-		"compression.type":  os.Getenv("COMPRESSIONTYPE"),
+		"compression.type":  compression,
 	})
 	if err != nil {
 		log.Printf("Failed to create producer: %s\n", err)

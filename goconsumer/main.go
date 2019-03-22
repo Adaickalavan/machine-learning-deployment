@@ -6,6 +6,7 @@ import (
 	"log"
 	"models"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -43,7 +44,8 @@ func init() {
 		}
 
 		var modelHandler models.Handler
-		switch modelName {
+		parts := strings.Split(modelName, "_")
+		switch parts[0] {
 		case "imagenet":
 			modelHandler, err = models.NewImagenet(modelurl, labelurl)
 			if err != nil {
@@ -102,7 +104,9 @@ func main() {
 			// log.Printf("%% Error: %v\n", ev)
 		case *kafka.Message:
 			err := message(ev)
-			log.Println("Error in reading Kafka.Message", err)
+			if err != nil {
+				log.Println("Error in reading Kafka.Message", err)
+			}
 		default:
 			// log.Println("Ignored")
 			// continue
@@ -133,14 +137,17 @@ func main() {
 func writeOutput(videoDisplay chan gocv.Mat) {
 	defer func() {
 		if r := recover(); r != nil {
+			log.Println("goconsumer-->writeOutput():PANICKED AND RESTARTING")
+			log.Println("Panic:", r)
 			go writeOutput(videoDisplay)
 		}
 	}()
 
 	broker := os.Getenv("KAFKAPORTOUT")
 	topic := os.Getenv("TOPICNAMEOUT")
+	compression := os.Getenv("COMPRESSIONTYPE")
 
-	p, _, err := confluentkafkago.NewProducer(broker)
+	p, _, err := confluentkafkago.NewProducer(broker, compression)
 	if err != nil {
 		p.Close()
 		log.Panic(err)
@@ -175,6 +182,6 @@ func writeOutput(videoDisplay chan gocv.Mat) {
 			Timestamp:      time.Now(),
 		}
 
-		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
+		log.Println("Message rewritten into Kafka")
 	}
 }

@@ -34,11 +34,13 @@ spec:
             - name: TOPICNAMEOUT
               value: videodisplay  
             - name: KAFKAPORTIN
-              value: kf1-service:19093
+              value: kf1-service:19094
             - name: KAFKAPORTOUT
-              value: kf1-service:19092  
+              value: kf1-service:19093  
             - name: GROUPNAME
               value: goconsumer 
+            - name: COMPRESSIONTYPE
+              value: gzip  
           envFrom:
             - configMapRef:
                 name: models-configmap    
@@ -51,8 +53,8 @@ metadata:
   name: models-configmap
 data:
   MODELURLS: |
-    {"imagenet":"http://tfserving-service:8501/v1/models/tfModel:predict",
-    "imagenet":"http://tfserving-service:8501/v1/models/tfModel:predict"}            
+    {"imagenet_1":"http://tfserving-service:8501/v1/models/tfModel:predict",
+    "imagenet_2":"http://tfserving-service:8501/v1/models/tfModel:predict"}            
   LABELURLS: |
-    {"imagenet":"/go/src/app/assets/imagenetLabels.json",
-    "imagenet":"/go/src/app/assets/imagenetLabels.json"}  
+    {"imagenet_1":"/go/src/app/assets/imagenetLabels.json",
+    "imagenet_2":"/go/src/app/assets/imagenetLabels.json"}  

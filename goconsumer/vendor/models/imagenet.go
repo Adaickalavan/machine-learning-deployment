@@ -43,6 +43,15 @@ func NewImagenet(modelurl string, labelurl string) (Handler, error) {
 
 //Predict classifies input images
 func (imn *imagenet) Predict() {
+	var resBody responseBody
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("models-->imn.Predict():PANICKED AND RESTARTING")
+			log.Println("Panic:", r)
+			go imn.Predict()
+		}
+	}()
+
 	//Write initial prediction into shared output channel
 	imn.chOut <- Output{Class: "Nothing"}
 
@@ -83,7 +92,7 @@ func (imn *imagenet) Predict() {
 		defer res.Body.Close()
 
 		//Process response from machine learning model
-		var resBody responseBody
+		// var resBody responseBody
 		decoder := json.NewDecoder(res.Body)
 		if err := decoder.Decode(&resBody); err != nil {
 			log.Println("Error in Decode: ", err)

@@ -17,8 +17,9 @@ func main() {
 	broker := os.Getenv("KAFKAPORT")
 	topic := os.Getenv("TOPICNAME")
 	frameInterval := time.Duration(getenvint("FRAMEINTERVAL"))
+	compression := os.Getenv("COMPRESSIONTYPE")
 
-	p, _, err := confluentkafkago.NewProducer(broker)
+	p, _, err := confluentkafkago.NewProducer(broker, compression)
 	if err != nil {
 		log.Fatal(err)
 	}
