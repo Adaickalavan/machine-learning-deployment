@@ -25,7 +25,6 @@ func NewConsumer(broker string, group string) (*kafka.Consumer, error) {
 		"enable.partition.eof":            true,
 		"auto.offset.reset":               "earliest",
 	})
-	// "go.events.channel.size":        1,
 
 	if err != nil {
 		log.Printf("Failed to create consumer: %s\n", err)

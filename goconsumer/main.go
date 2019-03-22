@@ -112,25 +112,25 @@ func main() {
 			// continue
 		}
 
-		//Record the current topic-partition assignments
-		tpSlice, err := c.Assignment()
-		if err != nil {
-			log.Println(err)
-			continue
-		}
+		// //Record the current topic-partition assignments
+		// tpSlice, err := c.Assignment()
+		// if err != nil {
+		// 	log.Println(err)
+		// 	continue
+		// }
 
-		//Obtain the last message offset for all topic-partition
-		for index, tp := range tpSlice {
-			_, high, err := c.QueryWatermarkOffsets(*(tp.Topic), tp.Partition, 100)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			tpSlice[index].Offset = kafka.Offset(high)
-		}
+		// //Obtain the last message offset for all topic-partition
+		// for index, tp := range tpSlice {
+		// 	_, high, err := c.QueryWatermarkOffsets(*(tp.Topic), tp.Partition, 100)
+		// 	if err != nil {
+		// 		log.Println(err)
+		// 		continue
+		// 	}
+		// 	tpSlice[index].Offset = kafka.Offset(high)
+		// }
 
-		//Consume the last message in topic-partition
-		c.Assign(tpSlice)
+		// //Consume the last message in topic-partition
+		// c.Assign(tpSlice)
 	}
 }
 

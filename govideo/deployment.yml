@@ -35,8 +35,10 @@ spec:
               value: kf1-service:19095
             - name: GROUPNAME
               value: videodisplay
-            - name: DISPLAYADDR
+            - name: DISPLAYPORT
               value: :8080  
+            - name: NODEPORT
+              value: :30163  
             - name: FRAMEINTERVAL
               value: "42"     
           resources:

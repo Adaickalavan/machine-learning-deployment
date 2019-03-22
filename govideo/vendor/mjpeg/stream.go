@@ -7,23 +7,19 @@
 package mjpeg
 
 import (
-	"confluentkafkago"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
-
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"gocv.io/x/gocv"
 )
 
 // Stream represents a single video feed.
 type Stream struct {
-	broker        string
-	topics        []string
-	group         string
-	frameInterval time.Duration
+	m             map[chan []byte]bool
+	frame         []byte
+	lock          sync.Mutex
+	FrameInterval time.Duration
 }
 
 const boundaryWord = "MJPEGBOUNDARY"
@@ -39,120 +35,53 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println("Stream:", r.RemoteAddr, "connected")
 	w.Header().Add("Content-Type", "multipart/x-mixed-replace;boundary="+boundaryWord)
 
-	doc := &topicMsg{}
+	c := make(chan []byte)
+	s.lock.Lock()
+	s.m[c] = true
+	s.lock.Unlock()
 
-	//Create new Consumer in a new ConsumerGroup
-	c, err := confluentkafkago.NewConsumer(s.broker, time.Now().String())
-	if err != nil {
-		log.Fatal("Error in creating NewConsumer.", err)
-	}
-	// Close the consumer
-	defer c.Close()
-
-	//Subscribe to topics
-	err = c.SubscribeTopics(s.topics, nil)
-	if err != nil {
-		c.Close()
-		log.Fatal("Error in SubscribeTopics.", err)
-	}
-
-	// Consume messages
-ConsumeLoop:
-	for e := range c.Events() {
-		switch ev := e.(type) {
-		case kafka.AssignedPartitions:
-			// log.Printf("%% %v\n", ev)
-			c.Assign(ev.Partitions)
-		case kafka.RevokedPartitions:
-			// log.Printf("%% %v\n", ev)
-			c.Unassign()
-		case kafka.PartitionEOF:
-			// log.Printf("%% Reached %v\n", ev)
-		case kafka.Error:
-			// Errors should generally be considered as informational, the client will try to automatically recover
-			// log.Printf("%% Error: %v\n", ev)
-		case *kafka.Message:
-
-			//Read message into `topicMsg` struct
-			err := json.Unmarshal(ev.Value, doc)
-			if err != nil {
-				// log.Println(err)
-				continue
-			}
-
-			//Retrieve img
-			// log.Printf("%% Message sent %v on %s\n", ev.Timestamp, ev.TopicPartition)
-			img, err := gocv.NewMatFromBytes(doc.Rows, doc.Cols, doc.Type, doc.Mat)
-			if err != nil {
-				// log.Println("Frame:", err)
-				continue
-			}
-
-			//Encode gocv mat to jpeg
-			jpeg, err := gocv.IMEncode(gocv.JPEGFileExt, img)
-			if err != nil {
-				// log.Println("Error in IMEncode:", err)
-				continue
-			}
-
-			// UpdateJPEG pushes a new JPEG frame onto the clients.
-			header := fmt.Sprintf(headerf, len(jpeg))
-			frame := make([]byte, (len(jpeg)+len(header))*2)
-			copy(frame, header)
-			copy(frame[len(header):], jpeg)
-
-			//Write new frame to web
-			_, err = w.Write(frame)
-			if err != nil {
-				break ConsumeLoop
-			}
-
-			//Wait for xx milliseconds
-			time.Sleep(s.frameInterval * time.Millisecond)
-
-		default:
-			// log.Println("Ignored")
-			continue
-		}
-
-		//Record the current topic-partition assignments
-		tpSlice, err := c.Assignment()
+	for {
+		time.Sleep(s.FrameInterval)
+		b := <-c
+		_, err := w.Write(b)
 		if err != nil {
-			// log.Println(err)
-			continue
+			break
 		}
-
-		//Obtain the last message offset for all topic-partition
-		for index, tp := range tpSlice {
-			_, high, err := c.QueryWatermarkOffsets(*(tp.Topic), tp.Partition, 100)
-			if err != nil {
-				// log.Println(err)
-				continue
-			}
-			tpSlice[index].Offset = kafka.Offset(high)
-		}
-
-		//Consume the last message in topic-partition
-		c.Assign(tpSlice)
 	}
 
+	s.lock.Lock()
+	delete(s.m, c)
+	s.lock.Unlock()
 	log.Println("Stream:", r.RemoteAddr, "disconnected")
 }
 
-type topicMsg struct {
-	Mat      []byte       `json:"mat"`
-	Channels int          `json:"channels"`
-	Rows     int          `json:"rows"`
-	Cols     int          `json:"cols"`
-	Type     gocv.MatType `json:"type"`
+// UpdateJPEG pushes a new JPEG frame onto the clients.
+func (s *Stream) UpdateJPEG(jpeg []byte) {
+	header := fmt.Sprintf(headerf, len(jpeg))
+	if len(s.frame) < len(jpeg)+len(header) {
+		s.frame = make([]byte, (len(jpeg)+len(header))*2)
+	}
+
+	copy(s.frame, header)
+	copy(s.frame[len(header):], jpeg)
+
+	s.lock.Lock()
+	for c := range s.m {
+		// Select to skip streams which are sleeping to drop frames.
+		// This might need more thought.
+		select {
+		case c <- s.frame:
+		default:
+		}
+	}
+	s.lock.Unlock()
 }
 
 // NewStream initializes and returns a new Stream.
-func NewStream(broker string, topics []string, group string, frameInterval time.Duration) *Stream {
+func NewStream(frameInterval time.Duration) *Stream {
 	return &Stream{
-		broker:        broker,
-		topics:        topics,
-		group:         group,
-		frameInterval: frameInterval,
+		m:             make(map[chan []byte]bool),
+		frame:         make([]byte, len(headerf)),
+		FrameInterval: frameInterval,
 	}
 }
