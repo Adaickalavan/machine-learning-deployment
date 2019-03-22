@@ -34,7 +34,7 @@ spec:
             - name: KAFKAPORT
               value: kf1-service:19095
             - name: GROUPNAME
-              value: videodisplay
+              value: govideo
             - name: DISPLAYPORT
               value: :8080  
             - name: NODEPORT

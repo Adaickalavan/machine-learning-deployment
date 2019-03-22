@@ -1,0 +1,22 @@
+---
+version: '3'
+
+services:
+  #Producer to obtain data from RTSP and write into Kafka queue
+  goproducer:
+    image: goproducer
+    container_name: goproducer 
+    environment:
+      - TOPICNAME=videocam
+      - KAFKAPORT=kafka1:19092
+      - COMPRESSIONTYPE=gzip
+      - VIDEOLINK=rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov
+      - FRAMEINTERVAL=42
+    networks:
+      - zookeeper_dockerNet 
+        # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
+      
+networks:
+  zookeeper_dockerNet:
+    external: true #Label the other docker-compose network as an external network to the current docker-compose file
+

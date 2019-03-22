@@ -1,0 +1,47 @@
+version: '3'
+services:
+
+  #Zookeeper
+  zookeeper1:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper1   
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    networks:
+      - dockerNet
+    ports:
+      - 2181:2181    
+    environment:
+      - ZOOKEEPER_SERVER_ID=1
+      - ZOOKEEPER_CLIENT_PORT=2181 
+      - ZOOKEEPER_TICK_TIME=2000
+
+  #Kafka
+  kafka1:
+    image: confluentinc/cp-kafka
+    container_name: kafka1
+    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    depends_on:
+      - zookeeper1
+    networks:
+      - dockerNet 
+    ports:
+      - 19091:19091
+      - 19092:19092
+      - 19093:19093
+      - 19094:19094
+      - 19095:19095
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181 
+      - KAFKA_ADVERTISED_LISTENERS=BROK://kafka1:19091, PROD1://kafka1:19092, PROD2://kafka1:19093, CONS1://kafka1:19094, CONS2://kafka1:19095  
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=BROK:PLAINTEXT, PROD1:PLAINTEXT, PROD2:PLAINTEXT, CONS1:PLAINTEXT, CONS2:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=BROK
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes 
+      - KAFKA_MESSAGE_MAX_BYTES=100000000 #100MB. (defaults to 1MB). message.max.bytes <= replica.fetch.max.bytes
+      - KAFKA_LOG_CLEANUP_POLICY=delete #Cleanup policy for segments beyond the retention window
+      - KAFKA_LOG_RETENTION_MINUTES=1 #Number of minutes to keep a log file before deleting. Default 168 hours.
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+networks:
+  dockerNet:
+    driver: bridge

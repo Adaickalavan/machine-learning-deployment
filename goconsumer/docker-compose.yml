@@ -1,0 +1,27 @@
+---
+version: '3'
+
+services:
+  goconsumer:
+    image: goconsumer
+    container_name: goconsumer 
+    environment:
+      - TOPICNAMEIN=videocam
+      - TOPICNAMEOUT=videodisplay
+      - KAFKAPORTIN=kafka1:19094
+      - KAFKAPORTOUT=kafka1:19093
+      - GROUPNAME=goconsumer
+      - COMPRESSIONTYPE=gzip
+      - MODELURLS: |-
+        {"imagenet_1":"http://tfserving-service:8501/v1/models/tfModel:predict",
+        "imagenet_2":"http://tfserving-service:8501/v1/models/tfModel:predict"}            
+      - LABELURLS: |-
+        {"imagenet_1":"/go/src/app/assets/imagenetLabels.json",
+        "imagenet_2":"/go/src/app/assets/imagenetLabels.json"}  
+    networks:
+      - zookeeper_dockerNet 
+        # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
+      
+networks:
+  zookeeper_dockerNet:
+    external: true #Label the other docker-compose network as an external network to the current docker-compose file

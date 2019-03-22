@@ -96,6 +96,8 @@ spec:
             - containerPort: 19091
             - containerPort: 19092
             - containerPort: 19093
+            - containerPort: 19094
+            - containerPort: 19095
           env:
             - name: MY_POD_IP
               valueFrom:
