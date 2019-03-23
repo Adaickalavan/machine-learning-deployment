@@ -8,7 +8,6 @@ import (
 	"mjpeg"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -16,16 +15,19 @@ import (
 )
 
 var (
-	stream        *mjpeg.Stream
-	broker        = os.Getenv("KAFKAPORT")
-	topics        = []string{os.Getenv("TOPICNAME")}
-	group         = os.Getenv("GROUPNAME")
-	displayport   = os.Getenv("DISPLAYPORT")
-	nodeport      = os.Getenv("NODEPORT")
-	frameInterval = time.Duration(getenvint("FRAMEINTERVAL"))
+	stream      *mjpeg.Stream
+	broker      = os.Getenv("KAFKAPORT")
+	topics      = []string{os.Getenv("TOPICNAME")}
+	group       = os.Getenv("GROUPNAME")
+	displayport = os.Getenv("DISPLAYPORT")
+	nodeport    = os.Getenv("NODEPORT")
 )
 
 func main() {
+	frameInterval, err := time.ParseDuration(os.Getenv("FRAMEINTERVAL"))
+	if err != nil {
+		log.Fatal("Invalid frame interval", err)
+	}
 	// Create new mjpeg stream
 	stream = mjpeg.NewStream(frameInterval)
 
@@ -53,14 +55,6 @@ func main() {
 	// Start http server
 	http.Handle("/", stream)
 	log.Fatal(http.ListenAndServe(displayport, nil))
-}
-
-func getenvint(str string) int {
-	i, err := strconv.Atoi(os.Getenv(str))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return i
 }
 
 func consumeMessages(c *kafka.Consumer) {

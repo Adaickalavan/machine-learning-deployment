@@ -40,7 +40,7 @@ spec:
             - name: NODEPORT
               value: :30163  
             - name: FRAMEINTERVAL
-              value: "42"     
+              value: "42ms"     
           resources:
 
 ---

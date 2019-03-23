@@ -16,10 +16,10 @@ func NewConsumer(broker string, group string) (*kafka.Consumer, error) {
 
 	// Create consumer
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":        broker,
-		"group.id":                 group,
-		"session.timeout.ms":       6000,
-		"go.events.channel.enable": true,
+		"bootstrap.servers":               broker,
+		"group.id":                        group,
+		"session.timeout.ms":              6000,
+		"go.events.channel.enable":        true,
 		"go.events.channel.size":          1,
 		"go.application.rebalance.enable": true,
 		"enable.partition.eof":            true,

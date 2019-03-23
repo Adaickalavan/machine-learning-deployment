@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -16,7 +15,10 @@ func main() {
 
 	broker := os.Getenv("KAFKAPORT")
 	topic := os.Getenv("TOPICNAME")
-	frameInterval := time.Duration(getenvint("FRAMEINTERVAL"))
+	frameInterval, err := time.ParseDuration(os.Getenv("FRAMEINTERVAL"))
+	if err != nil {
+		log.Fatal("Invalid frame interval", err)
+	}
 	compression := os.Getenv("COMPRESSIONTYPE")
 
 	p, _, err := confluentkafkago.NewProducer(broker, compression)
@@ -63,7 +65,7 @@ func main() {
 		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
 
 		//Wait for xx milliseconds
-		time.Sleep(frameInterval * time.Millisecond)
+		time.Sleep(frameInterval)
 
 		//Read delivery report before producing next message
 		// <-doneChan
@@ -82,12 +84,4 @@ type topicMsg struct {
 	Rows     int          `json:"rows"`
 	Cols     int          `json:"cols"`
 	Type     gocv.MatType `json:"type"`
-}
-
-func getenvint(str string) int {
-	i, err := strconv.Atoi(os.Getenv(str))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return i
 }
