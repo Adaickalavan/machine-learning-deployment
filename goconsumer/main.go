@@ -94,14 +94,18 @@ func main() {
 		case kafka.AssignedPartitions:
 			log.Printf("%% %v\n", ev)
 			c.Assign(ev.Partitions)
+			continue
 		case kafka.RevokedPartitions:
 			log.Printf("%% %v\n", ev)
 			c.Unassign()
+			continue
 		case kafka.PartitionEOF:
 			log.Printf("%% Reached %v\n", ev)
+			continue
 		case kafka.Error:
 			// Errors should generally be considered as informational, the client will try to automatically recover
 			log.Printf("%% Error: %v\n", ev)
+			continue
 		case *kafka.Message:
 			err := message(ev)
 			if err != nil {
@@ -109,6 +113,7 @@ func main() {
 			}
 		default:
 			log.Println("Ignored")
+			continue
 		}
 
 		//Record the current topic-partition assignments
@@ -136,7 +141,7 @@ func main() {
 func writeOutput(videoDisplay chan gocv.Mat) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("goconsumer-->writeOutput():PANICKED AND RESTARTING")
+			log.Println("main-->writeOutput():PANICKED AND RESTARTING")
 			log.Println("Panic:", r)
 			go writeOutput(videoDisplay)
 		}
@@ -181,6 +186,6 @@ func writeOutput(videoDisplay chan gocv.Mat) {
 			Timestamp:      time.Now(),
 		}
 
-		log.Println("Message rewritten into Kafka")
+		log.Printf("%% Message rewritten into Kafka at %v\n", time.Now())
 	}
 }

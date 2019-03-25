@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -26,6 +27,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Capture video from device
+	// webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
 	// Capture video from internet stream
 	webcam, err := gocv.OpenVideoCapture(os.Getenv("VIDEOLINK"))
 	if err != nil {
@@ -52,7 +55,8 @@ func main() {
 		//Prepare message to be sent to Kafka
 		docBytes, err := json.Marshal(doc)
 		if err != nil {
-			log.Fatal("Json marshalling error. Error:", err.Error())
+			log.Println("Json marshalling error. Error:", err.Error())
+			continue
 		}
 
 		//Send message into Kafka queue
@@ -62,6 +66,7 @@ func main() {
 			Timestamp:      time.Now(),
 		}
 
+		log.Printf("%% Message sent %v\n", time.Now())
 		log.Println("row :", frame.Rows(), " col: ", frame.Cols())
 
 		//Wait for xx milliseconds
@@ -84,4 +89,12 @@ type topicMsg struct {
 	Rows     int          `json:"rows"`
 	Cols     int          `json:"cols"`
 	Type     gocv.MatType `json:"type"`
+}
+
+func getenvint(str string) int {
+	i, err := strconv.Atoi(os.Getenv(str))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return i
 }

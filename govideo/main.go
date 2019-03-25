@@ -58,6 +58,14 @@ func main() {
 }
 
 func consumeMessages(c *kafka.Consumer) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("main-->consumeMessages():PANICKED AND RESTARTING")
+			log.Println("Panic:", r)
+			go consumeMessages(c)
+		}
+	}()
+
 	doc := &topicMsg{}
 
 	// Consume messages
@@ -66,14 +74,18 @@ func consumeMessages(c *kafka.Consumer) {
 		case kafka.AssignedPartitions:
 			log.Printf("%% %v\n", ev)
 			c.Assign(ev.Partitions)
+			continue
 		case kafka.RevokedPartitions:
 			log.Printf("%% %v\n", ev)
 			c.Unassign()
+			continue
 		case kafka.PartitionEOF:
 			log.Printf("%% Reached %v\n", ev)
+			continue
 		case kafka.Error:
 			// Errors should generally be considered as informational, the client will try to automatically recover
 			log.Printf("%% Error: %v\n", ev)
+			continue
 		case *kafka.Message:
 
 			//Read message into `topicMsg` struct
