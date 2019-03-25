@@ -6,6 +6,7 @@ services:
   goproducer:
     image: goproducer
     container_name: goproducer 
+    restart: on-failure 
     environment:
       - TOPICNAME=videocam
       - KAFKAPORT=kafka1:19092

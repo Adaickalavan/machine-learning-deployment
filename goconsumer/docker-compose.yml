@@ -5,6 +5,7 @@ services:
   goconsumer:
     image: goconsumer
     container_name: goconsumer 
+    restart: on-failure
     environment:
       - TOPICNAMEIN=videocam
       - TOPICNAMEOUT=videodisplay

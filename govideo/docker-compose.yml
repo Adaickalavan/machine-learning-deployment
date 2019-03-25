@@ -4,6 +4,7 @@ services:
   govideo:
     image: govideo
     container_name: govideo 
+    restart: on-failure
     ports:
       - 30163:30163
     environment:

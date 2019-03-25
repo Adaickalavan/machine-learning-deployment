@@ -5,7 +5,7 @@ services:
   zookeeper1:
     image: confluentinc/cp-zookeeper
     container_name: zookeeper1   
-    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    restart: unless-stopped #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
     networks:
       - dockerNet
     ports:
@@ -19,7 +19,7 @@ services:
   kafka1:
     image: confluentinc/cp-kafka
     container_name: kafka1
-    restart: always #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
+    restart: unless-stopped #Ensures that intermittent failures in the Docker environment do not result in unnecessary failures of the service.
     depends_on:
       - zookeeper1
     networks:
