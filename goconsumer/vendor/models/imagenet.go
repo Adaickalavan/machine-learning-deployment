@@ -36,7 +36,7 @@ func NewImagenet(modelurl string, labelurl string) (Handler, error) {
 			labels: labels,
 			url:    modelurl,
 			chIn:   make(chan Input),
-			chOut:  make(chan Output, 1),
+			chOut:  make(chan Output),
 		},
 	}, nil
 }
