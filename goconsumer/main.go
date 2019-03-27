@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"gocv.io/x/gocv"
 )
