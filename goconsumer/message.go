@@ -31,27 +31,27 @@ func message(ev *kafka.Message) error {
 		return err
 	}
 
-	// Query machine learning model.
-	for _, mp := range modelParams {
-		// Read from input channels
-		mp.modelHandler.Post(models.Input{Img: frame})
+	// Form output image
+	for ind := 0; ind < len(modelParams); ind++ {
+		mp := modelParams[ind]
 
-		// Write to output channels
+		// Get prediction
 		res, err := mp.modelHandler.Get()
 		if err == nil {
 			mp.pred = res.Class
 		}
-	}
 
-	// Form output image
-	for ind := 0; ind < len(modelParams); ind++ {
+		// Write prediction to frame
 		gocv.PutText(
 			&frame,
-			modelParams[ind].modelName+" : "+modelParams[ind].pred,
+			mp.modelName+" : "+mp.pred,
 			image.Pt(10, ind*20+20),
 			gocv.FontHersheyPlain, 1.2,
 			statusColor, 2,
 		)
+
+		// Post next frame
+		mp.modelHandler.Post(models.Input{Img: frame})
 	}
 
 	// Write image to output Kafka queue
