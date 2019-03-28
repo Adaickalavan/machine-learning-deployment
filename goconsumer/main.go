@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	_ "net/http/pprof"
-
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/pkg/profile"
 	"gocv.io/x/gocv"
 )
 
@@ -67,6 +66,8 @@ func init() {
 }
 
 func main() {
+	//Profiling
+	defer profile.Start(profile.ProfilePath("/tmp")).Stop()
 
 	// Load env variables
 	broker := os.Getenv("KAFKAPORTIN")
