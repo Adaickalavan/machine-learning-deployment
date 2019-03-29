@@ -6,11 +6,11 @@ import (
 	"log"
 	"models"
 	"os"
+	"profile"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/pkg/profile"
 	"gocv.io/x/gocv"
 )
 
@@ -119,32 +119,15 @@ func main() {
 			continue
 		}
 
-		//Record the current topic-partition assignments
-		tpSlice, err := c.Assignment()
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		//Obtain the last message offset for all topic-partition
-		for index, tp := range tpSlice {
-			_, high, err := c.QueryWatermarkOffsets(*(tp.Topic), tp.Partition, 100)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			tpSlice[index].Offset = kafka.Offset(high)
-		}
-
-		//Consume the last message in topic-partition
-		c.Assign(tpSlice)
+		// Reset offset to latest committed message
+		confluentkafkago.LatestOffset(c, 100)
 	}
 }
 
 func writeOutput(videoDisplay chan gocv.Mat) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("main-->writeOutput():PANICKED AND RESTARTING")
+			log.Println("main.writeOutput():PANICKED AND RESTARTING")
 			log.Println("Panic:", r)
 			go writeOutput(videoDisplay)
 		}

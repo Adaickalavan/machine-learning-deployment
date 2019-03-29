@@ -46,7 +46,7 @@ func (imn *imagenet) Predict() {
 	var resBody responseBody
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("models-->imn.Predict():PANICKED AND RESTARTING")
+			log.Println("models.*imagenet.Predict():PANICKED AND RESTARTING")
 			log.Println("Panic:", r)
 			go imn.Predict()
 		}
