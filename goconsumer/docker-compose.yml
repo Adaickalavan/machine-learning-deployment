@@ -18,7 +18,7 @@ services:
       - LABELURLS={"imagenet_1":"/go/src/app/assets/imagenetLabels.json",
         "imagenet_2":"/go/src/app/assets/imagenetLabels.json"}  
     volumes:
-      - /tmp:/tmp
+      - /tmp/goconsumer:/tmp
     networks:
       - zookeeper_dockerNet 
         # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
