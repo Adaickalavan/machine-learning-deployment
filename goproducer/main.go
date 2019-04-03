@@ -26,6 +26,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		// Close the producer
+		p.Flush(1000)
+		p.Close()
+	}()
 
 	// Capture video from device
 	// webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
@@ -38,8 +43,13 @@ func main() {
 
 	// Stream images from RTSP to Kafka message queue
 	frame := gocv.NewMat()
+	errCount := 0
 	for {
 		if !webcam.Read(&frame) {
+			errCount++
+			if errCount > 30 {
+				panic("Webcam read failure")
+			}
 			continue
 		}
 
@@ -74,12 +84,7 @@ func main() {
 
 		//Read delivery report before producing next message
 		// <-doneChan
-
 	}
-
-	// Close the producer
-	p.Flush(10000)
-	p.Close()
 }
 
 //Result represents the Kafka queue message format

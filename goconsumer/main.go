@@ -66,8 +66,10 @@ func init() {
 }
 
 func main() {
-	//Profiling
-	defer profile.Start(profile.ProfilePath("/tmp")).Stop()
+	// Profiling CPU
+	defer profile.Start(profile.CPUProfile, profile.ProfilePath("/tmp"), profile.NoShutdownHook).Stop()
+	// Profiling memory
+	// defer profile.Start(profile.MemProfile, profile.ProfilePath("/tmp"), profile.NoShutdownHook).Stop()
 
 	// Load env variables
 	broker := os.Getenv("KAFKAPORTIN")
