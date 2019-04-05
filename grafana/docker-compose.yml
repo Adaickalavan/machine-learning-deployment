@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana
+    container_name: grafana  
+    restart: always 
+    ports:
+      - 3000:3000
+    environment:
+      - GF_INSTALL_PLUGINS=ryantxu-ajax-panel
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+      - ./dashboards:/var/lib/grafana/dashboards
+    networks:
+      - zookeeper_dockerNet 
+        # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
+      
+networks:
+  zookeeper_dockerNet:
+    external: true #Label the other docker-compose network as an external network to the current docker-compose file

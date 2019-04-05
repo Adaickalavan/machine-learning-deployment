@@ -33,9 +33,9 @@ func main() {
 	}()
 
 	// Capture video from device
-	// webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
+	webcam, err := gocv.VideoCaptureDevice(getenvint("VIDEODEVICE"))
 	// Capture video from internet stream
-	webcam, err := gocv.OpenVideoCapture(os.Getenv("VIDEOLINK"))
+	// webcam, err := gocv.OpenVideoCapture(os.Getenv("VIDEOLINK"))
 	if err != nil {
 		panic("Error in opening webcam: " + err.Error())
 	}
