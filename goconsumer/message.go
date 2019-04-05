@@ -55,10 +55,11 @@ func message(ev *kafka.Message) error {
 	}
 
 	// Write image to output Kafka queue
-	select {
-	case videoDisplay <- frame:
-	default:
-	}
+	// select {
+	// case videoDisplay <- frame:
+	// default:
+	// }
+	videoDisplay <- frame
 
 	return nil
 }
