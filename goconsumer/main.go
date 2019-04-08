@@ -6,11 +6,11 @@ import (
 	"log"
 	"models"
 	"os"
-	"profile"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/pkg/profile"
 	"gocv.io/x/gocv"
 )
 
