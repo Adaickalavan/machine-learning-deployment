@@ -14,8 +14,8 @@ services:
       - VIDEOLINK=rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov
       - FRAMEINTERVAL=42ms
       - VIDEODEVICE=0
-    devices: 
-      - /dev/video0:/dev/video0   
+    # devices: 
+    #   - /dev/video0:/dev/video0   
     networks:
       - zookeeper_dockerNet 
         # To ensure that the containers in different docker-compose files communicate with each other, we place them on the same network. The complete network name is 'zookeeper_dockerNet'. It is derived by joining the name of the folder from which the network originates (i.e., zookeeper) and the name of the network (i.e., dockerNet).
